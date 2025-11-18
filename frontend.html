@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Dropbox</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0061ff;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 20px 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .upload-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label, button {
+      background: #0061ff;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    label:hover, button:hover {
+      background: #004ecc;
+    }
+
+    #status {
+      margin-top: 10px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #e0e0e0;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f4ff;
+      color: #333;
+    }
+
+    td button {
+      margin-right: 5px;
+      padding: 5px 10px;
+      font-size: 13px;
+    }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Dropbox</h1>
+
+  <div class="container">
+    <h2>Upload a file</h2>
+
+    <div class="upload-section">
+      <label for="fileInput">Choose File</label>
+      <input type="file" id="fileInput" />
+      <button id="uploadBtn">Upload</button>
+    </div>
+
+    <div id="status"></div>
+
+    <h2>Files</h2>
+    <table id="filesTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Size (bytes)</th>
+          <th>Uploaded At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="filesBody">
+        <tr class="empty"><td colspan="4">No files uploaded yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const apiBase = "https://localhost:8443";
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const status = document.getElementById("status");
+
+    // ==============================
+    // LIST FILES (MySQL version)
+    // ==============================
+    async function fetchFiles() {
+      const res = await fetch(`${apiBase}/files`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const tbody = document.getElementById("filesBody");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr class="empty"><td colspan="4">No files uploaded yet.</td></tr>';
+        return;
+      }
+
+      data.forEach(file => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+      <td>${file.name}</td>
+      <td>${file.size}</td>
+      <td>${new Date(file.uploadedAt).toLocaleString()}</td>
+      <td>
+        <button onclick="downloadFile(${file.file_id})">Download</button>
+        <button onclick="deleteFile(${file.file_id})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+    }
+
+    // ==============================
+    // UPLOAD FILE
+    // ==============================
+    async function uploadFile() {
+      const file = fileInput.files[0];
+      if (!file) {
+        status.textContent = "Please select a file first.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      status.textContent = "Uploading...";
+
+      const res = await fetch(`${apiBase}/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        status.innerHTML = `${result.message}`;
+        fetchFiles();
+      } else {
+        const errorText = await res.text();
+        status.textContent = errorText;
+      }
+
+      fileInput.value = "";
+    }
+
+    // ==============================
+    // DOWNLOAD FILE
+    // ==============================
+    async function downloadFile(id) {
+      const link = document.createElement("a");
+      link.href = `${apiBase}/download/${id}`;
+      link.download = id;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    // ==============================
+    // DELETE FILE
+    // ==============================
+    async function deleteFile(id) {
+      const res = await fetch(`${apiBase}/delete/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        const msg = await res.json();
+        alert(msg.message);
+        fetchFiles();
+      } else {
+        alert("Failed to delete file");
+      }
+    }
+
+    uploadBtn.addEventListener("click", uploadFile);
+    fetchFiles();
+  </script>
+</body>
+</html>

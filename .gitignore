@@ -1,0 +1,7 @@
+uploads/
+cert.pem
+key.pem
+*.exe
+*.out
+*.bin
+.vscode/
