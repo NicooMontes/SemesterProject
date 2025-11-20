@@ -5,6 +5,7 @@ pipeline {
         GO111MODULE = 'on'
         CGO_ENABLED = '0'
         GOPATH = "${WORKSPACE}/go"
+        PATH = "/opt/homebrew/bin:${GOPATH}/bin:${env.PATH}"
     }
     
     stages {
