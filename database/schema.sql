@@ -27,6 +27,9 @@ CREATE TABLE Files (
     version INT NOT NULL DEFAULT 1,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     INDEX idx_user_id (user_id)
+    priority ENUM('low', 'medium', 'high') NOT NULL DEFAULT 'low',
+    storage_policy ENUM('public', 'private', 'hybrid') NOT NULL DEFAULT 'public',
+    region ENUM('EU', 'GLOBAL') NOT NULL DEFAULT 'GLOBAL',
 ) ENGINE=InnoDB;
 
 -- ============================================
