@@ -109,8 +109,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		if err == sql.ErrNoRows {
 			// ===== INSERT NUEVO =====
 			_, err = db.Exec(`
-	            INSERT INTO files (user_id, size, filename, hash, version)
-	            VALUES (?, ?, ?, ?, 1)
+	            INSERT INTO files (user_id, size, filename, hash, version, priority, storage_policy, region)
+	            VALUES (?, ?, ?, ?, 1, 'medium', 'private', 'GLOBAL')
 	        `, 1, len(fileBytes), header.Filename, hashHex)
 
 			if err != nil {
@@ -156,7 +156,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 func handleListFiles(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := db.Query(`
-       SELECT file_id, size, filename, upload_date
+       SELECT file_id, size, filename, upload_date, priority, storage_policy, region
        FROM files
        WHERE user_id = 1
        ORDER BY upload_date DESC
@@ -176,7 +176,7 @@ func handleListFiles(w http.ResponseWriter, r *http.Request) {
 		var uploadTime time.Time
 
 		// IMPORTANTE: filename va en el medio
-		if err := rows.Scan(&m.FileID, &m.Size, &m.Name, &uploadTime); err != nil {
+		if err := rows.Scan(&m.FileID, &m.Size, &m.Name, &uploadTime, &m.Priority, &m.Storage, &m.Region); err != nil {
 			log.Println("SCAN ERROR:", err)
 			continue
 		}
