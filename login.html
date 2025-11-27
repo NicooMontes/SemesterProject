@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Dropbox</title>
+  <link rel="stylesheet" href="assets/bootstrap.min.css">
+  <script src="assets/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <h1>Mini Dropbox</h1>
+
+  <div class="container">
+    <form action="login-action.go" method="post">
+
+      <h2 class="text-center">Login</h2>
+      <div class="row mb-3">
+        
+          <label for="username" class="col-sm-3 col-form-label">UserName</label>
+        
+        <div class="col-sm-9">
+          <input type="username" id="username" class="form-control" required/>
+        </div>
+      </div>
+      <div class="row mb-3">
+
+        
+          <label for="password" class="col-sm-3 col-form-label">Password</label>
+        
+        <div class="col-sm-9">
+          <input type="password" id="password" class="form-control" required/>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-sm-12 text-center">
+          <input type="submit" value="login" class="btn btn-primary">
+        </div>
+      </div>
+    </form>
+
+  </div>
+
+  
+</body>
+
+</html>

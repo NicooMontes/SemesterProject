@@ -1,0 +1,88 @@
+ 
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0061ff;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 20px 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .upload-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+     button {
+      background: #0061ff;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #004ecc;
+    }
+
+    #status {
+      margin-top: 10px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #e0e0e0;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f4ff;
+      color: #333;
+    }
+
+    td button {
+      margin-right: 5px;
+      padding: 5px 10px;
+      font-size: 13px;
+    }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      margin-top: 20px;
+    }
+  
