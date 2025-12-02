@@ -23,6 +23,9 @@ type FileMeta struct {
 	Hash       string    `json:"hash"`
 	Size       int64     `json:"size"`
 	UploadedAt time.Time `json:"uploadedAt"`
+	Priority   int64     `json:"priority"`
+	Storage    string    `json:"storage"`
+	Region     string    `json:"region"`
 }
 
 var db *sql.DB
