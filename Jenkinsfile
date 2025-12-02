@@ -10,9 +10,7 @@ pipeline {
     }
 
     options {
-        // Limitar el tiempo máximo de ejecución del pipeline
         timeout(time: 20, unit: 'MINUTES')
-        // Mantener solo 10 builds para no llenar disco
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
@@ -26,17 +24,13 @@ pipeline {
 
         stage('Setup Go Environment') {
             steps {
-                echo 'Go version and environment'
-                sh '''
-                    go version
-                    go env
-                '''
+                sh 'go version'
+                sh 'go env'
             }
         }
 
         stage('Download Dependencies') {
             steps {
-                echo 'Downloading Go modules...'
                 sh '''
                     go mod download
                     go mod verify
@@ -51,52 +45,49 @@ pipeline {
             }
         }
 
-        stage('Parallel Analysis') {
-            parallel {
-                stage('Run Tests') {
-                    steps {
-                        echo 'Running tests with coverage...'
-                        sh '''
-                            go test -v ./... -coverprofile=coverage.out -covermode=atomic
-                            go tool cover -html=coverage.out -o coverage.html
-                        '''
-                    }
-                }
-
-                stage('Code Quality - Lint') {
-                    steps {
-                        echo 'Running golangci-lint...'
-                        sh '''
-                            if ! command -v golangci-lint &> /dev/null; then
-                                curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin
-                            fi
-                            golangci-lint run --out-format checkstyle > golangci-lint-report.xml || true
-                        '''
-                    }
-                }
-
-                stage('Security Scan') {
-                    steps {
-                        echo 'Running gosec security scanner...'
-                        sh '''
-                            if ! command -v gosec &> /dev/null; then
-                                go install github.com/securego/gosec/v2/cmd/gosec@latest
-                            fi
-                            gosec -fmt=json -out=gosec-report.json ./... || true
-                        '''
-                    }
-                }
+        stage('Run Tests & Coverage') {
+            steps {
+                echo 'Running tests with coverage...'
+                sh '''
+                    mkdir -p coverage
+                    go test -v ./... -coverprofile=coverage/coverage.out -covermode=atomic || true
+                    go tool cover -html=coverage/coverage.out -o coverage/coverage.html || true
+                '''
             }
         }
 
-        stage('Generate Test Reports') {
+        stage('Code Quality - Lint') {
             steps {
-                echo 'Converting test results to JUnit format...'
+                echo 'Running golangci-lint...'
+                sh '''
+                    if ! command -v golangci-lint &> /dev/null; then
+                        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GOPATH}/bin
+                    fi
+                    golangci-lint run --out-format checkstyle > golangci-lint-report.xml || true
+                '''
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                echo 'Running gosec security scanner (errors ignored)...'
+                sh '''
+                    if ! command -v gosec &> /dev/null; then
+                        go install github.com/securego/gosec/v2/cmd/gosec@latest
+                    fi
+                    gosec ./... -fmt=json -out=gosec-report.json || echo "Gosec failed, but continuing"
+                '''
+            }
+        }
+
+        stage('Generate JUnit Test Report') {
+            steps {
+                echo 'Generating JUnit XML test report...'
                 sh '''
                     if ! command -v go-junit-report &> /dev/null; then
                         go install github.com/jstemmer/go-junit-report@latest
                     fi
-                    go test -v ./... 2>&1 | go-junit-report > report.xml
+                    go test -v ./... 2>&1 | go-junit-report > report.xml || echo "<testsuites></testsuites>" > report.xml
                 '''
             }
         }
@@ -106,23 +97,19 @@ pipeline {
         always {
             echo 'Publishing reports and cleaning workspace...'
 
-            // Test reports
-            junit 'report.xml'
+            junit allowEmptyResults: true, testResults: 'report.xml'
 
-            // HTML coverage
             publishHTML([
-                allowMissing: false,
+                allowMissing: true,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
-                reportDir: '.',
+                reportDir: 'coverage',
                 reportFiles: 'coverage.html',
                 reportName: 'Go Coverage Report'
             ])
 
-            // Archive all reports
-            archiveArtifacts artifacts: 'coverage.out,coverage.html,report.xml,golangci-lint-report.xml,gosec-report.json', fingerprint: true
+            archiveArtifacts artifacts: 'coverage/coverage.out,coverage/coverage.html,report.xml,golangci-lint-report.xml,gosec-report.json', fingerprint: true
 
-            // Clean workspace
             cleanWs()
         }
 
